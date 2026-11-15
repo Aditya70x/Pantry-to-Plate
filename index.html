@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pantry-to-Plate | Smart Meal Generator</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: { 50: '#fdf4f0', 500: '#f97316', 600: '#ea580c', 700: '#c2410c' }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 min-h-screen transition-colors duration-200">
+
+    <!-- Top Navigation Bar -->
+    <header class="sticky top-0 z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800">
+        <div class="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+                <div class="bg-orange-500 p-2 rounded-xl text-white shadow-md shadow-orange-500/20">
+                    <i data-lucide="chef-hat" class="w-6 h-6"></i>
+                </div>
+                <span class="font-bold text-xl tracking-tight bg-gradient-to-r from-orange-500 to-amber-500 bg-clip-text text-transparent">Pantry-to-Plate</span>
+            </div>
+            
+            <div class="flex items-center space-x-3">
+                <button onclick="switchTab('generator')" id="nav-generator" class="px-4 py-2 text-sm font-medium rounded-lg transition bg-orange-500 text-white shadow-sm">Generator</button>
+                <button onclick="switchTab('saved')" id="nav-saved" class="px-4 py-2 text-sm font-medium rounded-lg transition text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800">Saved (<span id="saved-count">0</span>)</button>
+                <button onclick="toggleDarkMode()" class="p-2 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+                    <i data-lucide="moon" id="theme-icon" class="w-5 h-5"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="max-w-5xl mx-auto px-4 py-8">
+
+        <!-- GENERATOR VIEW -->
+        <div id="view-generator" class="space-y-8">
+            <!-- Hero Intro -->
+            <div class="text-center space-y-2">
+                <h1 class="text-3xl font-extrabold tracking-tight sm:text-4xl">What's in your kitchen today?</h1>
+                <p class="text-slate-600 dark:text-slate-400 max-w-xl mx-auto text-sm sm:text-base">Select your available ingredients or pantry staples below to instantly discover healthy, high-protein recipes you can cook right now.</p>
+            </div>
+
+            <!-- Ingredient Selector Box -->
+            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm space-y-6">
+                <!-- Filters/Preferences -->
+                <div class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-4">
+                    <div class="flex items-center space-x-2">
+                        <span class="text-xs font-semibold uppercase tracking-wider text-slate-500">Dietary:</span>
+                        <select id="diet-filter" onchange="filterAndRender()" class="bg-slate-100 dark:bg-slate-800 border-none text-xs rounded-lg px-3 py-1.5 font-medium focus:ring-2 focus:ring-orange-500">
+                            <option value="all">All Options</option>
+                            <option value="veg">Vegetarian</option>
+                            <option value="egg">Eggetarian</option>
+                        </select>
+                    </div>
+                    <button onclick="clearSelection()" class="text-xs text-orange-600 dark:text-orange-400 font-medium hover:underline flex items-center space-x-1">
+                        <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+                        <span>Reset Selection</span>
+                    </button>
+                </div>
+
+                <!-- Categories & Chips Container -->
+                <div id="ingredient-categories" class="space-y-5">
+                    <!-- Populated dynamically via script -->
+                </div>
+
+                <!-- Generate Button Action -->
+                <button onclick="generateMeals()" class="w-full py-3.5 px-6 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-semibold rounded-xl shadow-lg shadow-orange-500/25 transition transform active:scale-[0.99] flex items-center justify-center space-x-2">
+                    <i data-lucide="sparkles" class="w-5 h-5"></i>
+                    <span>Generate Matching Recipes</span>
+                </button>
+            </div>
+
+            <!-- Results Section -->
+            <div class="space-y-4">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-xl font-bold tracking-tight">Matching Recipes</h2>
+                    <span id="result-count" class="text-xs font-medium text-slate-500 bg-slate-200 dark:bg-slate-800 px-2.5 py-1 rounded-full">0 found</span>
+                </div>
+                <div id="recipe-results-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Populated dynamically -->
+                </div>
+            </div>
+        </div>
+
+        <!-- SAVED RECIPES VIEW -->
+        <div id="view-saved" class="hidden space-y-6">
+            <div class="border-b border-slate-200 dark:border-slate-800 pb-4">
+                <h1 class="text-2xl font-bold tracking-tight">Your Saved Bookmarks</h1>
+                <p class="text-sm text-slate-600 dark:text-slate-400">Quick access to your bookmarked meals stored safely in your browser.</p>
+            </div>
+            <div id="saved-results-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Populated dynamically -->
+            </div>
+        </div>
+
+    </main>
+
+    <!-- App Logic Script -->
+    <script>
+        // --- 1. Master Data Sets ---
+        const INGREDIENT_CATEGORIES = [
+            {
+                name: "Proteins & Dairy",
+                items: ["Eggs", "Paneer", "Soybean Chunks", "Chicken", "Dal / Lentils", "Chickpeas", "Dahi (Curd)", "Milk", "Cheese", "Butter / Ghee"]
+            },
+            {
+                name: "Grains & Carbs",
+                items: ["Atta (Wheat Flour)", "Bread", "Rice", "Oats", "Poha", "Makhana"]
+            },
+            {
+                name: "Veggies & Aromatics",
+                items: ["Onion", "Tomato", "Potato", "Garlic", "Ginger", "Green Chilies", "Spinach"]
+            }
+        ];
+
+        const RECIPES_DATABASE = [
+            {
+                id: "1",
+                name: "High-Protein Paneer Bhurji",
+                category: "veg",
+                prepTime: "15 mins",
+                protein: "22g",
+                calories: "310 kcal",
+                ingredients: ["Paneer", "Onion", "Tomato", "Green Chilies", "Butter / Ghee", "Garlic"],
+                instructions: "1. Heat butter in a pan, add chopped garlic, green chilies, and onions; saute until translucent.\n2. Add chopped tomatoes and cook until soft.\n3. Crumble paneer into the pan, mix well with turmeric and salt.\n4. Cook for 4-5 mins and serve hot with rotis or bread.",
+                tip: "No paneer? Use crumbled firm tofu or extra-boiled eggs instead."
+            },
+            {
+                id: "2",
+                name: "Protein-Packed Soybean Masala",
+                category: "veg",
+                prepTime: "20 mins",
+                protein: "26g",
+                calories: "280 kcal",
+                ingredients: ["Soybean Chunks", "Onion", "Tomato", "Potato", "Ginger", "Garlic"],
+                instructions: "1. Soak soybean chunks in hot water for 10 mins, squeeze dry.\n2. In a pan, saute onions, ginger-garlic paste, and tomatoes into a thick masala.\n3. Add boiled potatoes and soybean chunks, toss with spices.\n4. Add a cup of water, simmer for 8 mins, and serve warm.",
+                tip: "Add a dollop of dahi at the end for a richer gravy texture."
+            },
+            {
+                id: "3",
+                name: "Fluffy Masala Omelette & Bread",
+                category: "egg",
+                prepTime: "10 mins",
+                protein: "16g",
+                calories: "290 kcal",
+                ingredients: ["Eggs", "Onion", "Green Chilies", "Bread", "Butter / Ghee", "Tomato"],
+                instructions: "1. Whisk eggs with chopped onions, green chilies, tomatoes, and salt.\n2. Pour mixture onto a hot buttered pan and cook both sides.\n3. Toast bread slices on the side and serve together.",
+                tip: "Throw in a handful of chopped spinach into the egg mix for extra iron."
+            },
+            {
+                id: "4",
+                name: "Quick Curd Oats Bowl (Masala Oats)",
+                category: "veg",
+                prepTime: "10 mins",
+                protein: "12g",
+                calories: "240 kcal",
+                ingredients: ["Oats", "Dahi (Curd)", "Onion", "Green Chilies", "Butter / Ghee"],
+                instructions: "1. Dry roast oats for 2 minutes, then boil with water until soft and creamy.\n2. Temper onions and green chilies in ghee, mix into the cooked oats.\n3. Stir in whipped dahi off the heat to avoid curdling. Enjoy warm.",
+                tip: "Top with roasted makhana for a crunchy texture contrast."
+            },
+            {
+                id: "5",
+                name: "Wholesome Protein Poha",
+                category: "veg",
+                prepTime: "12 mins",
+                protein: "8g",
+                calories: "220 kcal",
+                ingredients: ["Poha", "Onion", "Green Chilies", "Potato", "Peanuts"],
+                instructions: "1. Rinse poha in a colander until soft and drain completely.\n2. Saute diced potatoes, onions, and green chilies until tender.\n3. Toss in the damp poha, turmeric, and salt; mix gently for 3 mins.",
+                tip: "Squeeze fresh lemon juice on top right before eating."
+            },
+            {
+                id: "6",
+                name: "Garlic Butter Chickpea Salad",
+                category: "veg",
+                prepTime: "10 mins",
+                protein: "15g",
+                calories: "260 kcal",
+                ingredients: ["Chickpeas", "Tomato", "Onion", "Garlic", "Butter / Ghee", "Lemon"],
+                instructions: "1. Toss boiled chickpeas in a pan with melted butter, minced garlic, and salt.\n2. Transfer to a bowl, mix with chopped onions, tomatoes, and herbs.\n3. Serve fresh as a light, high-protein snack.",
+                tip: "Use sprouted chickpeas for an extra nutritional boost."
+            }
+        ];
+
+        // --- 2. State Management ---
+        let selectedIngredients = new Set();
+        let savedRecipeIds = JSON.parse(localStorage.getItem('p2p_saved') || '[]');
+        let currentTab = 'generator';
+
+        // --- 3. Initialization ---
+        document.addEventListener('DOMContentLoaded', () => {
+            renderCategoryChips();
+            generateMeals(); // Show initial recipes
+            lucide.createIcons();
+            updateSavedCount();
+            
+            // Check system dark mode preference
+            if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                document.documentElement.classList.add('dark');
+                updateThemeIcon();
+            }
+        });
+
+        function renderCategoryChips() {
+            const container = document.getElementById('ingredient-categories');
+            container.innerHTML = INGREDIENT_CATEGORIES.map(cat => `
+                <div>
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2.5">${cat.name}</h3>
+                    <div class="flex flex-wrap gap-2">
+                        ${cat.items.map(item => `
+                            <button onclick="toggleIngredient('${item}')" id="chip-${escapeId(item)}" class="px-3 py-1.5 text-xs font-medium rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 text-slate-700 dark:text-slate-300 hover:border-orange-500 transition flex items-center space-x-1.5">
+                                <span class="chip-dot w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-700"></span>
+                                <span>${item}</span>
+                            </button>
+                        `).join('')}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function escapeId(str) {
+            return str.replace(/[^a-zA-Z0-9]/g, '_');
+        }
+
+        // --- 4. Interactions ---
+        function toggleIngredient(item) {
+            if (selectedIngredients.has(item)) {
+                selectedIngredients.delete(item);
+            } else {
+                selectedIngredients.add(item);
+            }
+            
+            // Update chip visual state
+            const chip = document.getElementById(`chip-${escapeId(item)}`);
+            const dot = chip.querySelector('.chip-dot');
+            if (selectedIngredients.has(item)) {
+                chip.classList.add('border-orange-500', 'bg-orange-50', 'dark:bg-orange-950/30', 'text-orange-700', 'dark:text-orange-300');
+                dot.classList.remove('bg-slate-300', 'dark:bg-slate-700');
+                dot.classList.add('bg-orange-500');
+            } else {
+                chip.classList.remove('border-orange-500', 'bg-orange-50', 'dark:bg-orange-950/30', 'text-orange-700', 'dark:text-orange-300');
+                dot.classList.add('bg-slate-300', 'dark:bg-slate-700');
+                dot.classList.remove('bg-orange-500');
+            }
+        }
+
+        function clearSelection() {
+            selectedIngredients.clear();
+            document.querySelectorAll('[id^="chip-"]').forEach(chip => {
+                chip.classList.remove('border-orange-500', 'bg-orange-50', 'dark:bg-orange-950/30', 'text-orange-700', 'dark:text-orange-300');
+                const dot = chip.querySelector('.chip-dot');
+                dot.classList.add('bg-slate-300', 'dark:bg-slate-700');
+                dot.classList.remove('bg-orange-500');
+            });
+            generateMeals();
+        }
+
+        // --- 5. Recipe Matching Engine ---
+        function generateMeals() {
+            const dietFilter = document.getElementById('diet-filter').value;
+            
+            // Score recipes based on matching ingredients
+            const scoredRecipes = RECIPES_DATABASE.map(recipe => {
+                // Dietary filter check
+                if (dietFilter !== 'all' && recipe.category !== dietFilter) {
+                    return { recipe, matchCount: -1 };
+                }
+
+                if (selectedIngredients.size === 0) {
+                    return { recipe, matchCount: 0 }; // Show all if nothing selected
+                }
+
+                let matchCount = 0;
+                recipe.ingredients.forEach(ing => {
+                    if (selectedIngredients.has(ing)) matchCount++;
+                });
+
+                return { recipe, matchCount };
+            }).filter(item => item.matchCount >= 0);
+
+            // Sort: if ingredients are selected, sort by highest matches first
+            if (selectedIngredients.size > 0) {
+                scoredRecipes.sort((a, b) => b.matchCount - a.matchCount);
+            }
+
+            renderRecipes(scoredRecipes.map(item => item.recipe), 'recipe-results-grid');
+            document.getElementById('result-count').innerText = `${scoredRecipes.length} available`;
+        }
+
+        function filterAndRender() {
+            generateMeals();
+        }
+
+        function renderRecipes(recipes, containerId) {
+            const grid = document.getElementById(containerId);
+            
+            if (recipes.length === 0) {
+                grid.innerHTML = `
+                    <div class="col-span-full py-12 text-center text-slate-500">
+                        <i data-lucide="search-x" class="w-12 h-12 mx-auto mb-3 opacity-40"></i>
+                        <p class="font-medium">No matching recipes found for your selection.</p>
+                        <p class="text-xs mt-1">Try selecting more pantry items or resetting your dietary filters.</p>
+                    </div>
+                `;
+                lucide.createIcons();
+                return;
+            }
+
+            grid.innerHTML = recipes.map(recipe => {
+                const isSaved = savedRecipeIds.includes(recipe.id);
+                return `
+                    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm flex flex-col justify-between space-y-4 transition hover:shadow-md">
+                        <div class="space-y-3">
+                            <div class="flex items-start justify-between">
+                                <div>
+                                    <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-orange-100 dark:bg-orange-950/50 text-orange-600 dark:text-orange-400">${recipe.category.toUpperCase()}</span>
+                                    <h3 class="font-bold text-lg mt-1">${recipe.name}</h3>
+                                </div>
+                                <button onclick="toggleSave('${recipe.id}')" class="p-2 rounded-xl text-slate-400 hover:text-orange-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+                                    <i data-lucide="bookmark" class="w-5 h-5 ${isSaved ? 'fill-orange-500 text-orange-500' : ''}"></i>
+                                </button>
+                            </div>
+
+                            <!-- Meta info pills -->
+                            <div class="flex items-center space-x-3 text-xs text-slate-500 dark:text-slate-400 font-medium">
+                                <span class="flex items-center space-x-1"><i data-lucide="clock" class="w-3.5 h-3.5"></i><span>${recipe.prepTime}</span></span>
+                                <span class="flex items-center space-x-1"><i data-lucide="zap" class="w-3.5 h-3.5 text-orange-500"></i><span>${recipe.protein} Protein</span></span>
+                                <span class="flex items-center space-x-1"><i data-lucide="flame" class="w-3.5 h-3.5 text-amber-500"></i><span>${recipe.calories}</span></span>
+                            </div>
+
+                            <!-- Ingredient checklist tags -->
+                            <div>
+                                <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Required Ingredients:</p>
+                                <div class="flex flex-wrap gap-1.5">
+                                    ${recipe.ingredients.map(ing => {
+                                        const hasIt = selectedIngredients.has(ing);
+                                        return `<span class="text-xs px-2 py-0.5 rounded-md ${hasIt ? 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-300 font-medium border border-emerald-200 dark:border-emerald-800/50' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'}">${ing}</span>`;
+                                    }).join('')}
+                                </div>
+                            </div>
+
+                            <!-- Instructions -->
+                            <div class="pt-2 border-t border-slate-100 dark:border-slate-800">
+                                <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">Instructions:</p>
+                                <p class="text-xs text-slate-600 dark:text-slate-300 whitespace-pre-line leading-relaxed">${recipe.instructions}</p>
+                            </div>
+                        </div>
+
+                        <!-- Substitution tip -->
+                        <div class="bg-amber-50 dark:bg-amber-950/20 border border-amber-200/60 dark:border-amber-9az/30 rounded-xl p-3 flex items-start space-x-2 text-xs text-amber-800 dark:text-amber-300">
+                            <i data-lucide="lightbulb" class="w-4 h-4 text-amber-600 shrink-0 mt-0.5"></i>
+                            <div><span class="font-semibold">Chef Tip:</span> ${recipe.tip}</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            lucide.createIcons();
+        }
+
+        // --- 6. Bookmarks & LocalStorage ---
+        function toggleSave(id) {
+            if (savedRecipeIds.includes(id)) {
+                savedRecipeIds = savedRecipeIds.filter(item => item !== id);
+            } else {
+                savedRecipeIds.push(id);
+            }
+            localStorage.setItem('p2p_saved', JSON.stringify(savedRecipeIds));
+            updateSavedCount();
+            
+            // Refresh views
+            if (currentTab === 'generator') {
+                generateMeals();
+            } else {
+                renderSavedView();
+            }
+        }
+
+        function updateSavedCount() {
+            document.getElementById('saved-count').innerText = savedRecipeIds.length;
+        }
+
+        function switchTab(tab) {
+            currentTab = tab;
+            const genView = document.getElementById('view-generator');
+            const savedView = document.getElementById('view-saved');
+            const navGen = document.getElementById('nav-generator');
+            const navSaved = document.getElementById('nav-saved');
+
+            if (tab === 'generator') {
+                genView.classList.remove('hidden');
+                savedView.classList.add('hidden');
+                navGen.className = "px-4 py-2 text-sm font-medium rounded-lg transition bg-orange-500 text-white shadow-sm";
+                navSaved.className = "px-4 py-2 text-sm font-medium rounded-lg transition text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800";
+                generateMeals();
+            } else {
+                genView.classList.add('hidden');
+                savedView.classList.remove('hidden');
+                navSaved.className = "px-4 py-2 text-sm font-medium rounded-lg transition bg-orange-500 text-white shadow-sm";
+                navGen.className = "px-4 py-2 text-sm font-medium rounded-lg transition text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800";
+                renderSavedView();
+            }
+        }
+
+        function renderSavedView() {
+            const savedRecipes = RECIPES_DATABASE.filter(r => savedRecipeIds.includes(r.id));
+            renderRecipes(savedRecipes, 'saved-results-grid');
+        }
+
+        // --- 7. Theme Toggle ---
+        function toggleDarkMode() {
+            document.documentElement.classList.toggle('dark');
+            updateThemeIcon();
+        }
+
+        function updateThemeIcon() {
+            const isDark = document.documentElement.classList.contains('dark');
+            const icon = document.getElementById('theme-icon');
+            icon.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
+            lucide.createIcons();
+        }
+    </script>
+</body>
+</html>
